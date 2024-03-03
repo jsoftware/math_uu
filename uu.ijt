@@ -146,7 +146,7 @@ Thus uu accepts [m/s/s] and [m/s^2] (units of acceleration)
 whereas SI insists on the format [m s⁻²].
 
 You can force UU to output units in the strict SI convention
-by setting: uunicode 2
+by setting: state_uu_ 2
 )
 
 state_uu_ 0
@@ -303,3 +303,9 @@ Addon: math/uu can be used as a class.
 This lets you run multiple instances of the UU engine
 each with its own separate state.
 )
+
+inst1 =: coclass
+state__inst1 2
+
+uu__inst1 '1.2 m/s'
+uu '1.2 m/s'
