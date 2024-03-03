@@ -1,498 +1,801 @@
-NB. Thu 01 Dec 2011 04:39:47 UU: scientific units conversion package
+0 :0
+Sunday 9 June 2019  07:18:45
+-
+UU: scientific units conversion package
+)
 
+require 'format/zulu'
+require 'math/uu/handy4uu'
 coclass 'uu'
+onload_z_=: empty
 
-NB. ========== NOUNS ==========
+PARENTDIR=: (zx i:'/'){.zx=.jpathsep>(4!:4<'zx'){4!:3''[zx=.''
 
-INVALID=: _.j_.
-NB. NOTE=: <;._1 ' C C# D D# E F F# G G# A A# B C'
-NOTFOUND=: _1
-NUN=: '??'	NB. unrecognised-units placeholder, used by: convert
+AABUILT=: '2020-06-29  23:36:34'
+
+'==================== [uu] constants ===================='
+0 :0
+Thursday 6 June 2019  22:43:34
+)
+
+cocurrent 'uu'
+
+ABOUT=: 0 : 0
+UU: scientific quantity converter
+-works with SI units, also Imperial and misc systems.
+)
+
+
+
+CUTAB0=: 2 2$<;._1 ' USD 1.3 GBP 0.8'
+CUTAB=: CUTAB0
+BADFLOAT=: __
+BADRAT=: __r1
+BADQTY=: '0 ??'
+BADUNITS=: '??'
+ERROR_UDIV=: '?/?'
+HD=: '·'
+PWM=: '^-'
+PWU=: '^_'
+PW=: '^'
 SL=: '/'
 SP=: ' '
-UNDEFINED=: _.	NB. should propagate in a formula
-mks=: ;:'m kg s A K cd mol rad eur'  NB. primitive SI-units
-SIG_z_=: 3		NB. used by: scino_z_ and format_sig
-SCI_z_=: 1e5	NB. used by: scino_z_
-UNICODE=: 1	NB. Used chiefly by: ucode
-MAXLOOP=: 30	NB. limits: convert
-UCASE=: 0	NB. =:1 for case-insensitive ssmx
-sess=: empty
-sess_umake=: empty
-	NB. currency exchange-rate tables, used by: quoted
-	NB. quoted currencies are expressed in terms of the Euro.
-	NB. if net is accessible, CUTAB to be updated from Eurobank figures
-CUTAB0=: 2 2$<;._1 ' USD 1.3 GBP 0.8'	NB. initial short table
-CUTAB=: CUTAB0				NB. pre-start value
+ST=: '*'
+UL=: '_'
+UNDEFINED=: _.
 
 
-NB. ========== PREREQS ==========
 
-all=: *./
-and=: *.
-any=: +./
-brack=:	1 |. '][' , ":	NB. layout tool for message string ->'[y]'
-cmx=: [: > <;._2	NB. expects trailing LF
-nb=: [: ([: }. [: ; ' ' ,&.> ]) ":&.>	NB. embed nums in string
-or=:  +.
-not=: -.
-to=:    [ + [: i. [: >: -~	NB. eg: 3 to 5 <--> 3 4 5
 
-cx=: 3 : 0
-	NB. check for complex nouns in given locale
+
+factory=: 3 : 0
+
+SIC=: 1
+SIG=: 3
+SCI=: 5
+SIZ=: __
+ZERO=: 'NO'
+i.0 0
+)
+
+CANNOTSCALE=: cutopen 0 : 0
+gas.mark
+midi
+note
+)
+
+TEMPERATURE_SCALES=: cutopen 0 : 0
+K
+Kelvin
+C
+Centigrade
+Celsius
+F
+Fahrenheit
+Ne
+Newton
+Re
+Ré
+Reaumur
+Réaumur
+Ro
+Roe
+Rø
+Roemer
+Rømer
+Delisle
+De
+)
+
+
+REF_UUC=: >cutopen 0 : 0
+1 /	[saved]	BASIC TESTING ONLY
+1 m	[m]	fundamental unit - metre (distance)
+1 kg	[kg]	fundamental unit - kilogramme (mass)
+1 s	[s]	fundamental unit - second (time)
+1 A	[A]	fundamental unit - Ampere (electric current)
+1 K	[K]	fundamental unit - Kelvin (temperature)
+1 cd	[cd]	fundamental unit - candela (light intensity)
+1 mol	[mol]	fundamental unit - mole (amount of matter)
+1 rad	[rad]	fundamental unit - radian (angle)
+1 eur	[eur]	fundamental unit - euro (currency)
+1 /	[/]	fundamental unit - (dimensionless)
+1 *	[*]	fundamental unit - (matches any units)
+0.0254 m	[in]	inch
+12 in	[ft]	feet
+36 in	[yd]	yard
+1760 yd	[mi]	mile
+1 s	[sec]	second (time)
+60 s	[min]	minute
+60 min	[h]	hour
+24 h	[d]	day
+1 /s	[Hz]	Frequency; Hertz
+2p1 rad	[cyc]	cycle
+1/360 cyc	[deg]	degree of arc
+1 deg	[dms]	degrees as deg min sec
+)
+
+REF_UUF=: >cutopen 0 : 0
+PI*r*r : r(m)		[m^2]	area of circle
+sin a ; a(rad)		[/]	sine
+cos a ; a(rad)		[/]	cosine
+tan a ; a(rad)		[/]	tangent
+)
+
+REF_UUM=: ''
+SIbu=: ;:'m kg s A K mol cd'
+mks=:   SIbu,'rad';'eur'
+
+cocurrent 'z'
+
+
+
+
+
+
+
+
+
+
+REF_PI=:  31415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821x
+
+
+
+REF_EXP=: 2718281828459045235360287471352662497757247093699959574966967627724076630353547594571382178525166427427x
+
+
+
+REF_RT2=: 141421356237309504880168872420969807856967187537694807317667973799073247846210703885038753432764157x
+
+ICE_F=: 32x
+ICE_C=: 0x
+ICE_K=: 27315r100
+BOIL_F=: 180x + ICE_F
+BOIL_C=: 100x + ICE_C
+BOIL_K=: 100x + ICE_K
+
+'==================== [z] utilities ===================='
+cocurrent 'z'
+
+REPOCAL=: jpath '~Addons/math/cal'
+REPOUU=:  jpath '~Addons/math/uu'
+
+O=: '\'-.~ 0 :0
+cal''  NB\. open cal.ijs
+cai''  NB\. open cal_interface
+uui''  NB\. open uu_interface
+uuc''  NB\. open uuc
+uuf''  NB\. open uuf
+uut''  NB\. open uu lab
+utf''  NB\. open uu test folder
+)
+
+cal=: 3 : 'open REPOCAL,''/cal.ijs'''
+cai=: 3 : 'open REPOCAL,''/source/cal_interface.ijs'''
+uui=: 3 : 'open REPOUU,''/source/uu_interface.ijs'''
+uuc=: 3 : 'open TPUC sl ''/uuc.ijs'''
+uuf=: 3 : 'open TPUF sl ''/uuf.ijs'''
+uum=: 3 : 'open TPUM sl ''/uum.ijs'''
+uut=: 3 : 'open TPUU sl ''/uu.ijt'''
+uuu=: 3 : 'open TPUU sl ''/uu.ijs'''
+utf=: 3 : 'openf REPOUU,''/test'''
+
+test=: test_uu_
+tpaths=: tpaths_uu_
+ident=: ([: , [) -: ([: , ])
+choice=: 4 : '((0>.1<.x)){y'
+abs=: |
+avg=: +/ % #
+div=: %
+int=: [: <. ] + 0 > ]
+mod=: |~
+times=: *
+
+'==================== [uu] utilities ===================='
+cocurrent 'uu'
+
+test=: 3 : 0
+
+smoutput '+++ BUILTIN TEST OF UU [CAL, TABULA]'
+try. smoutput '--- VERSION of UU -- ',VERSION_uu_ catch. end.
+try. smoutput '--- VERSION of CAL -- ',VERSION_cal_ catch. end.
+try. smoutput '--- VERSION of TABULA -- ',VERSION_tabby_ catch. end.
+
+smoutput '--- TP*_z_ paths:'
+tpaths''
+)
+
+tpaths=: 3 : 0
+
+xx=. 3 : '". y,''_z_'''
+zz=. 0 2$a:
+zz=.zz ,  (xx z) ;~ z=:'TPAR'
+zz=.zz ,  (xx z) ;~ z=:'TPAT'
+zz=.zz ,  (xx z) ;~ z=:'TPCA'
+zz=.zz ,  (xx z) ;~ z=:'TPCL'
+zz=.zz ,  (xx z) ;~ z=:'TPMC'
+zz=.zz ,  (xx z) ;~ z=:'TPMT'
+zz=.zz ,  (xx z) ;~ z=:'TPMU'
+zz=.zz ,  (xx z) ;~ z=:'TPNG'
+zz=.zz ,  (xx z) ;~ z=:'TPSA'
+zz=.zz ,  (xx z) ;~ z=:'TPTA'
+zz=.zz ,  (xx z) ;~ z=:'TPTT'
+zz=.zz ,  (xx z) ;~ z=:'TPUC'
+zz=.zz ,  (xx z) ;~ z=:'TPUF'
+zz=.zz ,  (xx z) ;~ z=:'TPUM'
+zz=.zz ,  (xx z) ;~ z=:'TPUT'
+zz=.zz ,  (xx z) ;~ z=:'TPUU'
+)
+
+
+dfr=: 3 : '180*y%PI'
+rfd=: 3 : 'PI*y%180'
+cutByPattern=: 13 : '((;:y) -. <,ST) -.~ ;:x'
+cutByPattern=: ((<,'*') -.~ [: ;: ]) -.~ [: ;: [
+
+report_complex_nouns=: 3 : 0
+
 loc=. >coname''
 nocomplex=. 1
-for_no. (nl 0) -. <'INVALID' do.  val=. ".nom=. >no
+for_no. nl 0 do.  val=. ".nom=. >no
   if. 16=3!:0 val do.
     smoutput nb 'cx:' ; nom ; 'is complex'
     nocomplex=. 0
   end.
 end.
-NB. Suppress ok-confirmation...
-NB. if. nocomplex do. smoutput 'cx: no nouns are complex in: ',loc end.
+
 i.0 0
 )
 
-undefined=: (3 : 0)"0
-	NB. test for presence of UNDEFINED
+isUndefined=: (3 : 0)"0
+
 if. -. 128!:5 y do. 0 return. end.
 '_.' -: 5!:6 <'y'
 )
 
-invalid=: (3 : 0)"0
-	NB. test for presence of INVALID
-if. -. 128!:5 y do. 0 return. end.
-'_.j_.' -: 5!:6 <'y'
-)
-
 quoted=: 3 : 0
-	NB. =1 iff (y) is a quoted currency
+
 (<toupper y) e. {."1 CUTAB
 )
 
-NB. ========== ADVERBS ==========
+utoks=: 3 : 0
 
-NB. ========== CONJUNCTIONS ==========
+z=. sp1 y
+z=. (z e. SP,SL) <;.1 z
+)
 
-NB. ========== VERBS ==========
+vt=: viewtable=: ''&$: :(4 : 0)
 
-adj=: 4 : 0
-	NB. adjust numeral y for units: x
-	NB. cases prefixed '_' are inverse adjustments used by: setvalue
-select. x
-fcase. 'Celsius'	do.
-fcase. 'Centigrade'	do.
-case. 'degC'	do.	z=. y-273.16
-fcase. '_Celsius'	do.
-fcase. '_Centigrade'	do.
-case.'_degC'	do.	z=. y+273.16
-fcase. 'Fahrenheit'	do.
-case. 'degF'	do.	z=. y-459.688
-fcase. '_Fahrenheit'	do.
-case.'_degF'	do.	z=. y+459.688
-case.		do.     z=. y	NB. default adjustment (none)
+
+
+
+
+
+
+faux=. 'i unitc units unitv uvalc rvalc uvalu rvalu uvald rvald'
+
+if. '' -:x do. x=. faux end.
+if. isNo y do.
+  y=. y+i.10 default 'VIEWTABLE'
+end.
+if. isLit y do.
+  y=. units i. b4o y
+end.
+st =. (":&.>)"0
+cst=. ([: st [) ,. [: st ]
+]h=. ,: ;: cols=. x
+]i=. i.#UUC
+]t=. ". cols rplc SP;' cst '
+h,y{t
+)
+0 :0
+vt I. uvalc ~: uvalu
+vt I. uvald>0
+)
+
+dip=: 3 : 0
+
+assert (#y)=(#UUC)
+smoutput '+++ how many? - ',": (+/y)
+if. 0<+/y do.
+smoutput '+++ their IDs?'
+smoutput list I. y
+smoutput '+++ their names?'
+smoutput list units pick~ I. y
+smoutput '+++ their codes?'
+smoutput list unitc pick~ I. y
+end.
+smoutput 75#'-'
+)
+
+ID=: 3 : 0
+
+
+
+units i. ;:y
+)
+
+sci2j=: '/%-_Ee'&charsub
+sci4j=: '%/_-eE'&charsub
+
+'==================== [uu] rational ===================='
+
+0 :0
+Wednesday 6 May 2020  12:21:14
+wd'beep'
+-
+BADRAT - a bona-fide rational, but intended as signalling an error
+)
+
+cocurrent 'uu'
+
+s4x=: 16&$: :(4 : 0)
+
+
+P=. ":y
+if. x<#P do. P=. x{.P end.
+".P,'r1',(<:#P)#'0'
+)
+
+rat_z_=: rational_z_=: x:!.0
+float_z_=: _1&x:
+extended_z_=: x:!.0
+numDenom_z_=: 2&x:
+rat4pair_z_=: (_2&x:)&x:
+isRational=: 64 128 e.~ 3!:0
+isExtended=: 64 = 3!:0
+isFloating=: 8 = 3!:0
+notFloat=: 8 ~: 3!:0
+
+rat4sl=: 3 : 0 "1
+
+msg '... rat4sl: y=[(y)]'
+if. BADRAT = a=: reval '/'taketo y do. BADRAT
+elseif. BADRAT = b=: reval '/'takeafter y do. BADRAT
+elseif. do. rat a%b
 end.
 )
 
-canc=: 4 : 0
-	NB. cancel-out
-	NB. serves: canon
-	NB. eg: ' m kg kg/kg/kg s/s' canc 'kg'
-z=. ,x		NB. the object string
-n=. SP,y	NB. unit: y in numerator
-d=. SL,y	NB. unit: y in denominator
-whilst. -. w-:z do.
-  z=. (w=.z) rplc (n,d);'' ; (d,n);''
+rat4pn=: 3 : 0 "1
+
+msg '... rat4pn: y=[(y)]'
+try.
+  assert. 0= 4!:0 <y
+  y~
+catch.
+  msg '>>> rat4pn: cannot handle y=''(y)'''
+  BADRAT
 end.
 )
+
+rat4pt=: 3 : 0 "1
+
+msg '... rat4pt: y=[(y)]'
+if. (y begins '10^_') or (y begins '10^-') do. ". NN=:'1r1',(".4}.y)#'0'
+elseif. y begins '10^' do. ". NN=:'x' ,~ '1',(".3}.y)#'0'
+elseif. do.
+  msg '>>> rat4pt: cannot handle y=''(y)'''
+  BADRAT
+end.
+)
+
+rat4po=: 3 : 0 "1
+
+msg '... rat4po: y=[(y)]'
+if. BADRAT = a=. reval '^'taketo y do. BADRAT
+elseif. BADRAT = b=. reval '^'takeafter y do. BADRAT
+elseif. do. rat a^b
+end.
+)
+
+rat4neg=: 3 : 0 "1
+
+msg '... rat4neg: y=[(y)]'
+if. BADRAT = a=. reval }.y do. BADRAT
+else. rat -a
+end.
+)
+
+rat4bad=: 3 : 0 "1
+
+msg '>>> rat4bad: y=[(y)]'
+BADRAT
+)
+
+rat4sc=: 3 : 0 "1
+
+y=. y rplc 'E' ; 'e' ; '-' ; '_'
+c=. 'e' taketo y
+a=. ".c-.DT
+b=. ".y
+scale=. rnd 10^. a%b
+msg '... rat4sc: y=[(y)] scale=(scale) c=(c) a=(a) b=(b)'
+if. isRational b do. b
+elseif. scale<0      do. ". ((c-.DT) , (|scale)#'0') , 'r1'
+elseif.              do. ". (c-.DT) , 'r1' , scale#'0'
+end.
+)
+
+rat_check=: 3 : 0 "0
+
+if. 0=#y do. rat_check i.6 return. end.
+try.
+select. y
+case. 0 do. assert. all boo=. uvalu = float rvalu
+case. 1 do. assert. all boo=. uvald = float rvald
+case. 2 do. assert. all boo=. uvalc = float rvalc
+case. 3 do. assert. all boo=. -. uvalu e. 0 _ __
+case. 4 do. assert. all boo=. -. uvald e. _ __
+case. 5 do. assert. all boo=. -. uvalc e. 0 _ __
+end.
+
+catch.
+  bads=. I. -.boo
+  smoutput sw'>>> rat_check[(y)] failed at these UUC rows…'
+  smoutput vt bads
+end.
+)
+
+isNum=: 1 4 8 16 64 128 e.~ 3!:0
+
+evalRC=: 4 : 0 "1
+
+EVAL__=:''
+rc=. (9+2*x)&o.
+try.
+  if. isNo z=.".y do. rc z	[EVAL__=: 'scalar num expression'
+  else. BADFLOAT		[EVAL__=: 'evaluates -not scalar num'
+  end.
+catch. BADFLOAT		[EVAL__=: 'fails to evaluate'
+end.
+)
+
+eval=: (3 : 0)"1
+
+
+
+
+
+0 eval y
+:
+EVAL__=:''
+if. 0=#y do. BADFLOAT		[EVAL__=: 'empty'
+elseif. _1=4!:0<y do. BADFLOAT	[EVAL__=: 'unassigned id'
+elseif. 0=4!:0<y do. x evalRC y
+elseif. do.
+  x evalRC '/%-_Ee'charsub ,>y
+end.
+)
+
+ieval=: 1&eval
+
+ireval=: 3 : 0 "1
+
+
+y=. deb >y
+if. 'j' e. y do. rat4sc 'j' takeafter y
+else. 0x
+end.
+)
+
+reval=: 3 : 0 "1
+
+
+
+
+msg '+++ reval: y=(y)'
+doo=. ". :: rat4bad
+if. 0=#y=. deb >y do. BADRAT [msg '>>> reval: empty y'
+elseif. y-: ,'_' do. _r1
+elseif. y-: '__' do. __r1
+elseif. ('-'={.y) or ('_'={.y) do. rat4neg y
+elseif. all y e. n9 do. doo y,'x'
+elseif. (all (}:y) e. n9) and ('x'={:y) do. doo y
+elseif. all y e. n9,'r' do. doo y
+elseif. all y e. n9,'/' do. doo '/r'charsub y
+elseif. '/' e. y do. rat4sl y
+elseif. _1=4!:0<y do. BADRAT [msg '>>> reval: empty y'
+elseif. 'j' e. y do. rat4sc :: rat4bad 'j' taketo y
+elseif. all y e. n9,'._' do. rat4sc :: rat4bad y
+elseif. 'e' e. y do. rat4sc :: rat4bad y
+elseif. 'E' e. y do. rat4sc :: rat4bad y
+elseif. y begins '10^' do. rat4pt ::rat4po y
+elseif. '^' e. y do. rat4po y
+elseif. 0=nc <y  do. rat4pn y
+elseif.          do. rat eval y
+end.
+)
+
+onload 'load temp 101'
+
+'==================== [uu] syntax_machines ===================='
+0 :0
+Thursday 15 November 2018  05:05:14
+-
+Syntax machines defined in this script:
+	cutuuc	-tokenizes a line of UUC
+	smddmmyy	-recognises date
+	smtime	-recognises time
+)
+
+cocurrent 'uu'
+
+spout=: 3&$: :(4 : 0)
+
+w=. {:$z=. vv y
+for_k. i.x-w do.
+  z=. SP,.z
+end.
+,z
+)
+
+f5=: 3 : 0
+
+Outsymbols=. ' .:|;!$'
+z=. |: (5;sj;mj);: y
+i=. 0{z
+j=. 1{z
+r=. 2{z
+c=. 3{z
+R=. 4{z
+O=. 5{z
+iy=. i{y
+smoutput '           ',spout i
+smoutput '       (y) ',spout iy
+smoutput 'y-class(c) ',spout c
+smoutput '  state(r) ',spout r
+smoutput 'outcode(O) ',spout O{Outsymbols
+smoutput 'w-begin(j) ',spout j
+)
+
+mj=. 0 $~ 256
+mj=. 1 ch}mj [ ch=. a.i. SP,TAB
+mj=. 2 ch}mj [ ch=. a.i. az,AZ,n9,'._-/^*%'
+mj=. 3 ch}mj [ ch=. a.i. '['
+mj=. 4 ch}mj [ ch=. a.i. ']'
+
+
+sj=. +. ".&> }. cutLF (0 define)
+  X    S    A    [    ]
+ 1j1  0j0  1j1  1j1  1j1
+ 1j0  2j2  1j0  3j0  1j0
+ 2j2  2j0  2j0  5j2  2j0
+ 3j0  3j0  3j0  3j2  4j2
+ 4j6  4j6  4j6  4j6  4j6
+ 3j1  3j1  3j1  3j1  3j1
+)
+
+cutuuc=: (0;sj;mj)&;: "1
+t=. ,: 0   0   0j6 0j6 1j1 1j1 0j6
+t=. t, 0j6 0j6 0j6 0j6 2   2   0j6
+t=. t, 0j6 0j6 3j3 0j6 0j6 0j6 0j6
+t=. t, 0j6 0j6 0j6 0j6 4j1 4j1 0j6
+t=. t, 0j6 0j6 0j6 0j6 5   5   0j6
+t=. t, 0j6 0j6 6j3 0j6 0j6 0j6 0j6
+t=. t, 0j6 0j6 0j6 0j6 7j1 7j1 0j6
+t=. t, 0j6 0j6 0j6 0j6 8   8   0j6
+t=. t, 0j3 0j3 0j6 9   0j6 0j6 0j6
+t=. t, 0j6 0j6 0j6 0j6 10  10  0j6
+t=. t, 0j3 0j3 0j6 0j6 10  10  0j6
+
+sj=. +. t
+mj=.   < LF ; (NUL,SP,TAB) ; CO ; DT ; '012345' ; '6789'
+smtime=: ((0;sj;mj) ;: ucp)"1
+
+onload"1 cmx 0 : 0
+smoutput smtime '23:58'
+smoutput smtime '23:58:59'
+smoutput smtime '23:58:59.12'
+smoutput smtime '23:58:59.'
+smoutput smtime '23:58:59. '
+smoutput smtime '23:58:59   '
+)
+t=. ,: 0   0   0j6 1j1 1j1 0j6 0j6
+t=. t, 0j6 0j6 0j6 2   2   2   0j6
+t=. t, 0j6 0j6 3j3 0j6 0j6 0j6 0j6
+t=. t, 0j6 0j6 0j6 4j1 0j6 0j6 0j6
+t=. t, 0j6 0j6 0j6 5   5   5   0j6
+t=. t, 0j6 0j6 6j3 0j6 0j6 0j6 0j6
+t=. t, 0j6 0j6 0j6 7j1 0j6 0j6 0j6
+t=. t, 0j6 0j6 0j6 8   8   8   0j6
+t=. t, 0j3 0j3 0j6 0j6 0j6 0j6 0j6
+
+sj=. +. t
+mj=.   < LF ; (NUL,SP,TAB) ; SL ; '01' ; '23' ; '456789'
+smddmmyy=: ((0;sj;mj) ;: ucp)"1
+
+onload"1 cmx 0 : 0
+smoutput smddmmyy '31/12/18'
+smoutput smddmmyy '31/13/18   '
+smoutput smddmmyy '31/13/18',LF
+)
+
+'==================== [uu] main ===================='
+
+cocurrent 'uu'
+
+bris=: unucode@unslash1@undotted@deb"1
 
 canon=: 3 : 0
-	NB. Sort units (str y) into canonical order
-	NB. y must be fully-resolved units, ie all from boxed list: mks
-	NB. Sort boxed tokens ignoring SP|SL. This brings num+denom terms together
+
+
+
 z=. ; |. each sort |. each utoks y
-	sess nb 'canon:' ; TAB ; 'z=' ; z
-	NB. Cancel-out/collect each unit from global boxed list: mks in turn...
-for_w. mks do. m=. ,>w		NB. m== next unit from list: mks
-  if. any m E. z do.		NB. only if m is present in z
+	msg '... canon: z=(z)'
+
+for_w. mks do. m=. ,>w
+  if. any m E. z do.
     z=. (z canc m) coll m
-	sess nb 'canon:' ; TAB ; (brack m) ; 'z=' ; z
+	msg '... canon: [(m)] z=(z)'
   end.
 end.
-z=. debnSL dlb ; sort utoks z	NB. k-m-s order, with denominators gathered behind
-if. 0=#z do. z=. ,SL end.  	NB. CONVENTION: (empty z) --> ,'/'
+z=. debnSL dlb ; sort utoks z
+if. 0=#z do. z=. ,SL end.
+msg '--- canon: EXITS: z=(z)'
+z return.
 )
 
-cnvf=: 3 : 0
-	NB. expand y using units->unitv, also return the conversion factor f
-z=. (f=. INVALID) ; '' ; NOTFOUND	NB. "not-found" returned value
-t=. utoks cnvv y			NB. y is a bare (units), no SP|SL
-if. LK=NOTFOUND do. z return. end.
-try. z=. (f=.LK{uvalu); t; LK		NB. item-value from LK: UU-row found by: cnvv
-catch.
-end.
-	sess nb 'cnvf:' ; TAB ; 'f=' ; f ; (linz t)
-z
-)
+cnvi=: 1&$: : (4 : 0)
 
-cnvi=: 4 : 0
-	NB. invert SP <--> SL throughout token-list iff (Bool)x
-if. x do.
-  for_i. i.#y do.
-    z=. >i{y
-    if. SL={.z do.
-      z=. SP,(}.z)
-    elseif. SP={.z do.
-      z=. SL,(}.z)
-    end.
-    y=. (<z) i}y
+if. -.x do. y return. end.
+zz=. ''
+for_i. i.#y do. z=. >i{y
+  if.     SL={.z do. zz=. zz,< SP,}.z
+  elseif. SP={.z do. zz=. zz,< SL,}.z
   end.
 end.
-y
-)
-
-cnvj=: 3 : 0
-	NB. cut prefs/suffs from a cunit (eg: '/kg^3')
-if. (SL~:{.y) and ('-' e. y) do. y=. SL,dlb y-.'-' end.	NB. fix for: 0 deslash
-k=. p=. 1 [ z=. y
-if. j=.(SL={. sp1 z) do. z=. }.z end.	NB. bool:j remembers dropped prefix: SP|SL
-if. '^' e. z do.			NB. recognise a power...
-  'p z'=. (".{:z) ; (}:}:z)		NB. drop/remember suffixed power (as integer)
-end.
-	NB. Identify scaling prefixes, eg 'ms', 'Gs' -variants of: s
-	NB. ONLY IF z is not itself in: units, eg 'knot' ...
-if. (iskg z) or (not validunits z) do.
-	NB. Identify a 2-CHAR scaling prefix ...
-  if. 	  'da'-:2{.z do.	k=. 1e1		[ z=.2}.z	NB. deka-
-  elseif. 'mu'-:2{.z do.	k=. 1e_6	[ z=.2}.z	NB. micro-
-  elseif. do.
-	NB. Identify a 1-CHAR scaling prefix ...
-    select. {.z
-     case. 'h' do. k=. 1e2	[ z=.}.z	NB. hecto-
-     case. 'k' do. k=. 1e3	[ z=.}.z	NB. kilo-
-     case. 'M' do. k=. 1e6	[ z=.}.z	NB. mega-
-     case. 'G' do. k=. 1e9	[ z=.}.z	NB. giga-
-     case. 'T' do. k=. 1e12	[ z=.}.z	NB. tera-
-     case. 'P' do. k=. 1e15	[ z=.}.z	NB. peta-
-     case. 'E' do. k=. 1e18	[ z=.}.z	NB. exa-
-     case. 'Z' do. k=. 1e21	[ z=.}.z	NB. zetta-
-     case. 'Y' do. k=. 1e24	[ z=.}.z	NB. yotta-
-     case. 'd' do. k=. 1e_1	[ z=.}.z	NB. deci-
-     case. 'c' do. k=. 1e_2	[ z=.}.z	NB. centi-
-     case. 'm' do. k=. 1e_3	[ z=.}.z	NB. milli-
-     case. 'u' do. k=. 1e_6	[ z=.}.z	NB. micro- (alternative to: mu)
-     case. 'n' do. k=. 1e_9	[ z=.}.z	NB. nano-
-     case. 'p' do. k=. 1e_12	[ z=.}.z	NB. pico-
-     case. 'f' do. k=. 1e_15	[ z=.}.z	NB. femto-
-     case. 'a' do. k=. 1e_18	[ z=.}.z	NB. atto-
-     case. 'z' do. k=. 1e_21	[ z=.}.z	NB. zepto-
-     case. 'y' do. k=. 1e_24	[ z=.}.z	NB. yocto-
-    end.
-  end.
-end.
-z=. deb z
-  NB. Scaling prefixes recognised above:
-  NB.	------------------------------------------------------------------------------
-  NB. 	deca- 	hecto- 	kilo- 	mega- 	giga- 	tera- 	peta- 	exa- 	zetta- 	yotta-
-  NB. 	da 	h 	k 	M 	G 	T 	P 	E 	Z 	Y
-  NB. 	10^1 	10^2 	10^3 	10^6 	10^9 	10^12 	10^15 	10^18 	10^21 	10^24
-  NB.	------------------------------------------------------------------------------
-  NB. 	deci- 	centi- 	milli- 	micro- 	nano- 	pico- 	femto- 	atto- 	zepto- 	yocto-
-  NB. 	d 	c 	m 	µ 	n 	p 	f 	a 	z 	y
-  NB. 	10^−1 	10^−2 	10^−3 	10^−6 	10^−9 	10^−12 	10^−15 	10^−18 	10^−21 	10^−24
-  NB.	------------------------------------------------------------------------------
- sess nb 'cnvj:' ; TAB ; '/-?' ; j ; 'scale(k)=' ; k ; 'units(z)=' ; z ; 'power(p)=' ; p
-j ; k ; z ; p		NB. here z has NO prefixed SP (or SL)
-)
-
-cnvnon=: 3 : 0
-	NB. extract 1st non-mks token
-i=. (y e. mkss)i. 0	NB. index of 1st token not in mkss
-if. i<#y do.
-  t=. >i{y		NB. the extracted token
-  y=. (i~: i.#y)# y	NB. the residue without t
-else.
-  t=. ''		NB. and y is unchanged
-end.
- sess nb 'cnvnon:' ; TAB ; 'next non-mks token=' ; (brack t) ; 'leaving:' ; (linz y)
-(deb t) ; <y
-)
-
-cnvv=: 3 : 0
-unitv cnvv y
-:
-	NB. the x-(unitv/x) entry corresp to units: y
-	NB. SETS GLOBAL CACHED LOOKUP INDEX: LK <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-LKS=: ,LK=: NOTFOUND	NB. init to: "not-found" value
-if. 0=#z=. I.units=(<,y) do. '' return. end.
-LK=: {.LKS=: z
->LK{x		NB. Only the first match is returned
-)
-
-cnvx=: 3 : 'unitx cnvv y'
-
-coll=: 4 : 0
-	NB. collects-terms (no cancel-out)
-	NB. serves: canon
-	NB. eg: ' m kg kg/kg/kg s/s' coll 'kg'
-	NB.	 m kg^2/kg^2 s/s
-P=. '^'
-z=. ,x			NB. the object string
-n=. SP,y		NB. unit: y in numerator
-d=. SL,y		NB. unit: y in denominator
-for_p. 4 3 2 do.	NB. 4th-power units are highest recognised
-  z=. z rplc ((p*$n)$n);(n,P,":p) ; ((p*$d)$d);(d,P,":p)
-  sess nb 'coll:' ; TAB ; 'z=' ; z ; 'j=' ; j
-end.
-z
-)
-
-compatible=: 4 : 0
-	NB. =1 iff units x,y compatible
-	NB. '*' is compatible with everything...
-if. ('*'= {.>x) or ('*'= {.>y) do. 1 return. end.
-ux=. compat cnvv >x [ uy=. compat cnvv >y
-	sess nb 'compatible:'; 'ux='; ux; 'uy='; uy
-if. (0<#uy) and (uy-:ux) do. 1 return. end.
-a=. {.convert >x [ b=. {.convert >y
-a-:b	NB. match their canonical units
-)
-
-compatlist=: 3 : 0
-	NB. return extract of (units) compatible with units: y
-z=. ''
-	NB. if there's a compat-code (uy), get its mates
-	NB. else lookup its cfm in: unitx
-if. 0<#uy=. compat cnvv >y do.
-  z=. (I. uy=compat){units
-else.
-  cn=. {.convert y
-  z=. (I. cn=unitx){units
-end.
-	NB. If [m] present include [mm] [cm] [km] too
-if. z e.~ <,'m' do. z=. (;:'m km cm mm'),z end.
-	NB. incl uy itself and its canon
-z=. ~. (<,y),z,{.convert y
-)
-
-convert=: 3 : 0
-1 convert y	NB. x=1 --use: uvalx
-:
-	NB. y(units) --> cu ; loop_count ; cf
-	NB. Converts arbitrary compound units (str) to primitive SI-units as defined in: mks
-	NB. Needed to compare two arbitrary units to see if compatible / inter-convertible.
-	NB. Simplifies the result of a division of 2 physical quantities.
-	NB. Returns 3-element: z
-	NB.  (>{.z) is the canonical units (cu)
-	NB.  (>{:z) is conversion factor (cf)
-	NB.  (>1{z) is diagnostic only: the number of lookup-cycles.
-	NB. Returns a canonical form (defined by: canon) to allow comparison using (-:).
-	NB.  DEFN cunit: a canonical element, having prefix, scale and power, eg '/s^2'
-	NB. Has a set of service-fns with names all cnv*:
-	NB.  cnvnon z	extract 1st non-mks cunit(, returns: cunit;residue
-	NB.  cnvj t	cut t into: (1_if_prefixed_SL ; 10^n_scale ; unit ; ^n_repetition)
-	NB.  cnvf t	lookup t in: units-->unitv, returns (factor ; units)
-	NB. 		-if not found, factor is _. -test using: isNaN f
-	NB.  cnvv t	called by: cnvf
-	NB.  j cnvi t	converts all SP<-->SL in cunits-str: t iff j=1
-	NB. 		- (j=1 iff the cunit of which t is the expansion had prefix SL
-	NB. Uses: cnvnon to find first non-mks unit, t, 0=$t if no more units remaining.
-	NB. A units str consists of a series of tokens called "cunits", order immaterial.
-	NB. A cunit may be prefixed by SL (/) denoting denominator or by SP denoting numerator.
-	NB. Fn: utoks tokenises a units str. ensures 1st cunit has a leading SP
-	NB.  provided a leading SL is not already present. Uses sp1 to achieve this.
-	NB. Since SP is a meaningful cunit prefix, use of: deb will expunge not only SP,SP
-	NB.  but also any leading SP. But there must be a leading SP|SL.
-	NB. Uses: cnvf to lookup (bare) unit in: units-->unitv
-	NB. The expanded units tokens are then SUFFIXED to the unprocessed residue: rx
-	NB. -we can do that since order of cunits is immaterial.
-	NB. Fn: cnvf also returns conversion factor (f)
-	NB. Finally when no more units to expand (max cycles=30 as failsafe)
-	NB. the result is converted to canonical form using: canon.
-if. x do.	NB. SPEEDUP: try: unitx, uvalx (if there)
-  if. 0<#z=.cnvx y do. (z ; 1 ; LK{uvalx) return. end.
-end.
-fac=. 1				NB. conversion factor init'd
-z=. utoks y			NB. needs y tokenised
- sess nb 'convert:' ; 'utoks=' ; z
-	NB. Comb repeatedly through tokenized (boxed) z, converting tokens by lookup in UUC,
-	NB. each converted token (expanded) is appended to back of z, to be combed again,
-	NB. Repeat until all tokens in z are mks (=metre-kilogram-second)
-for_i. i.MAXLOOP do.
-  loop=. i+1			NB. loop-count available on drop-thru
-  't rz'=. cnvnon z		NB. extract 1st non-mks token: t leaving residue: rz
-  if. 0=#t do. break. end.	NB. quit loop if all are mks tokens
-  if. t-:,'*' do. ('*' ; loop ; 1) return. end.	NB. '*' factor always 1
-  'j k tt p'=. cnvj t		NB. separate: t -eg: '/ms^2' --> 1;0.001;'s';2
-  'f ttt lk'=. cnvf tt		NB. lookup tt in UUC --> factor(f) ; new_tt(ttt) ; UUC_line#(lk)
-  if. (isNaN f) or (lk=_1) do. (NUN ; loop ; _) return. end.	NB. SIGNALS FAILURE !!
-  subfac=. (f*k)^p
-	NB. accumulate subfac into fac, according to whether j specifies numerator/denominator
-  fac=. fac * subfac^(np j)
-  z=. rz,p#(j cnvi ttt)		NB. put back into z: p-replicated (inverted) ttt
-	sess nb 'convert:';(brack loop); 'z=';(linz z); 'fac=';fac; 'j=';j; 'subfac=';subfac
-end.
-	NB. if MAXLOOP reached then must assume not all non-mks tokens have been converted
-if. loop=MAXLOOP do. loop=. 0 end. NB. signalling a suspicious result
-(canon ;z) ; loop ; fac
+zz return.
 )
 
 curfig=: 3 : 'hy (0 j. 2)":y'
 debSL=: #~ (+. (1: |. (> </\)))@('/'&~:)
 
 debnSL=: 3 : 0
-	NB. remove SL repetitions preserving (any) leading SL
-	NB. serves: canon
+
+
 if. SL={.y do. SL,debSL }.y
 else. debSL y
 end.
 )
 
-deslash=: 3 : 0
-1 deslash y
-:
-	NB. convert cunits with '/' into '^_n' form
-	NB. inverse transformation iff x=0
-NB.   y_uu_=: y=. 'Ang m kg^-1 sec^-2' [ x=. 0	NB. <<<< TEST 
-NB.   y_uu_=: y=. 'Ang m/kg/sec^2'	NB. <<<< TEST 
-if. UNICODE<2 do. y return. end.
-r=. ''	NB. accumulates modified cunits
+deslash=: 1&$: : (4 : 0)
+
+
+
+r=. ''
 for_cu. utoks y do. cunit=. >cu
-  if. (x=0) or SL={.cunit do.	NB. inverse: do BOTH SP SL
-    'j k z p'=. cnvj cunit
+  if. (x=0) or SL={.cunit do.
+    'j k z p'=. cnvCunit cunit
     if. x do.
-      cunit=. SP, (}. '^' taketo cunit),'^-',":p
+      cunit=. SP, (}. PW taketo cunit),PWM,":p
     else.
-      NB. smoutput cunit ; j ; k ; z ; p
-      cunit=. (j{SP,SL), (}. '^' taketo cunit) ,(p>1)# '^',":p
+      sllog 'deslash__ cunit j k z p'
+      cunit=. (j{SP,SL), (}. PW taketo cunit) ,(p>1)# PW,":p
     end.
   end.
   r=. r,cunit
 end.
-dlb r
+dlb r return.
 )
 
-eval=: 3 : 0
-	NB. used to evaluate numeric exprns in UUC
-y=. '/%-_Ee'charsub ;y
-try. {.".y catch. INVALID end.
+displacement=: (3 : 'uvald {~ units i. <,y') :: 0:
+rdisplacement=: (3 : 'rvald {~ units i. <,y') :: 0:
+
+dotted=: 1&$: : (4 : 0)
+
+
+]z=. utf8 deb y
+if. x do.
+  if. any HD E. z do. y return. end.
+  ]z=. z rplc SP;HD
+else.
+  if. -.any HD E. z do. y return. end.
+  z=. z rplc HD;SP
+end.
 )
 
 exrate=: exrate_exch_
-
-format=: 3 : 0
-'' format y
-:
-	NB. format numeral y by units: x
-	NB. always returns a string
-if. undefined y do. 'UNDEFINED' return.
-elseif. invalid y do. 'INVALID' return.
-end.
-select. ,x
-	NB. INSERT FURTHER fcase.s HERE for unicoded suffix
- case. 'asec'	do. z=. '"' upost format_sig y
- case. 'amin'	do. z=. '''' upost format_sig y
-fcase. 'degF'	do.
- case. 'degC'	do. z=. format_sci x adj y
-fcase. 'Fahrenheit'	do.
-fcase. 'Centigrade'	do.
- case. 'Celsius'	do. z=. 'deg' upost format_sci x adj y
- case. 'deg'	do. z=. format_deg y	NB. (deg amin asec)
- case. 'usd'	do. z=. '$',curfig y
-fcase. 'gbp'	do.
- case. 'eur'	do. z=. x upref curfig y  NB. 2 sig figures
- case. ,'!'	do. z=. >(y=0){'YES';'NO'
- case. 'midi'	do. z=.": rnd midino y	NB. MIDI-number
- case. 'note'	do. z=. note y	NB. musical note
-	NB. INSERT FURTHER fcase.s HERE for sci-notation
-fcase. ,'c'	do.	NB. lightspeed
-fcase. 'eV'	do.	NB. electron-volt
-fcase. 'Hz'	do.	NB. frequency: Hertz
- case. 'rad'	do. z=. format_sci y
-	NB. INSERT FURTHER fcase.s HERE for SIG controlled
-fcase. ,'/'	do.	NB. dimensionless
- case. ,'*'	do. z=. format_sig y
-	NB. ALL ELSE...
- case.		do. z=. format_general y
-end.
-ucode z
-)
-
-format_deg=: 3 : 0
-	NB. output y as: '360deg 0amin 30asec'
-	NB. ucode -converts this to the usual symbols
-if. y-:'' do. y=. undeg 360 0 30 end.	NB. TEST <<<<<
-neg=. (y<0)#'-'
-NB. suf=. '° ' ; ''' ' ; '"'
-suf=. 'deg ' ; 'amin ' ; 'asec'
-z=._ 60 60 #: 3600*|y
-z=. ": each <. z
-neg , ; z ,each suf
-)
-
-NB. format_general=: toupper@hy@":
-format_general=: format_sci
-format_sci=: toupper@hy@scino
-NB. format_sig=: 3 : 'hy (j. SIG)":y'
-format_sig=: format_sci
 
 hy=: '_-' charsub ]
 isNaN=: 128!:5
 
 iskg=: 3 : 0
-	NB. =1 iff units y is 'kg' or begins with: 'kg'
-	NB. and is scalable by altering prefix
+
+
 if. y-:'kg' do. 1 return. end.
 if. not 'kg' -: 2{.y do. 0 return. end.
-	NB. Further test(s) if z starts with: 'kg'
-if. any 'kg^' E. y do. 0 return. end.	NB. cannot accept powers of [kg]
-1	NB. accept with no more tests
+
+if. any 'kg^' E. y do. 0 return. end.
+1
 )
 
-linz=: 3 : 0
-	NB. linearize a boxed string of tokens for smoutput
-z=. }: ; (>y) ,. '|'
-brack z -. SP
+midi4Hz=: midino=: 69 + 12 * 2 ^. 440 %~ ]
+Hz4midi=: midino inv
+
+nnote4Hz=: nnote=: 3 : 'rnd 12 | midino y'
+
+note4Hz=: note=: 3 : 0
+
+NOTE=. cut 'C C# D D# E F F# G G# A A# B C'
+,>NOTE {~ nnote y
 )
 
-midino=: 69 + 12 * 2 ^. 440 %~ ]	NB. "midi number" of freq: y (Hz)
+Hz4note=: note4Hz inv
 
-note=: 3 : 0
-	NB. nearest musical note of freq: y (Hz)
+0 :0
+Hz4note=: 3 : 0
+
+
 NOTE=. <;._1 ' C C# D D# E F F# G G# A A# B C'
-,>NOTE {~ rnd 12 | midino y
+130.81
 )
 
-0 : 0
-note 440	NB. A (concert-pitch is 440 Hz)
-note 194.18	NB. G (earth-rotation musical note)
+qty4str=: 3 : 0
+
+
+val=. eval strValueOf y
+uni=. dltb SP takeafter y
+val ; uni
 )
 
-np=: [: <: 2 * -.
 rnd=: [: <. 0.5 + ]
-set_ucase=: 3 : 'UCASE=: y'
 
-setsci=: 3 : 0
-	NB. set SCI (significant figures for: format)
-SCI_z_=: ". ": y
+trim0=: 3 : 0
+
+if. 'E' e. y do.
+  'n m'=. 'E'cut y
+  z=. (trim0 n),'E',m
+  z return.
+end.
+z=. deb y
+if. (1=+/DT=z) and (DT~: {: }:z) and all z e. n9,DT do. z=. dt0 z end.
+if. DT={:z do. z=. z,'0' end.
+z return.
 )
 
-setsig=: 3 : 0
-	NB. set SIG (decimal places for: format)
-SIG_z_=: ". ": y
+scino=: (3 : 0)"0
+
+
+
+
+y=. float y
+if. y=0 do. z=. ,'0'
+elseif. (10^SIZ)>|y do. z=. '0',~ '- +'{~ 1+*y
+elseif. any (10^SCI)<: y,%y do. z=. sci4j y":~ 0 j. -SIG
+elseif. y=<.y do. z=. sci4j ":y
+elseif. do.
+  z=. sci4j y":~ 0 j. SIG
+  if. *./ z e. '-0.' do. z=. sci4j y":~ 0 j. -SIG end.
+end.
+
+trim0 z return.
 )
 
-scino=: 3 : 0
-	NB. Scientific notation for number: y
-NB. if. 0>4!:0 <'SIG_z_' do. SIG_z_=: 3 end.
-NB. if. 0>4!:0 <'SCI_z_' do. SCI_z_=: 1e5 end.
-if. y=0 do. ,'0' return. end.
-fmt=. j. SIG * 1 _1 {~ (SCI <: |y)  or  ((10^-SIG) > |y)
-fmt ": y
+slash1=: 1&$: : (4 : 0)
+
+
+z=. deb y
+if. x do.
+  if. ')'={:z do. y return. end.
+  z=. canon z
+  a=. '/' taketo z
+  b=. '/' dropto z
+  z=. deb b rplc SL;SP
+  if. SP e. z do.
+    z=. a,'/',paren z
+  else.
+    z=. a,'/',z
+  end.
+else.
+  if. ')'~:{:z do. y return. end.
+  a=. '(' taketo z
+  b=. }: '(' takeafter z
+  z=. a, b rplc SP;SL
+end.
 )
 
 sp1=: 3 : 0
-	NB. ensure ONE leading SP iff there is no SL
+
 y=. deb y
 if. SL~:{.y do. y=. SP,y end.
 )
@@ -501,284 +804,1025 @@ ssmx=: 4 : 'if. UCASE do. x ssmxU y else. x ssmxM y end.'
 ssmxM=: 4 : 'I. * +/"(1) y ss"1 x'
 ssmxU=: 4 : '(toupper x)ssmxM toupper y'
 
-start=: 3 : 0
-	NB. start the addon: UU
-	NB. Not just called on loading,
-	NB. but can be called by apps using UU whenever
-	NB. the constants library (UUC) has been changed.
-	NB. (Not needed when the functions library (UUF) changed)
-load :: 0: TPATH_UU,'manifest.ijs'	NB. sets VERSION
-load TPATH_UUC
-load TPATH_UUF
-umake''
-)
+hasutf=: [: +./ 127 < a. i. ]
+isascii=: [: *./ 128 > a. i. ]
+undeslash=: 0&deslash
 
-test=: 3 : 0
-	NB. inspect result of: umake
-if. y=_ do. 0 test _	NB. to output the whole table
-else. y test y		NB. just a single line
-end.
-:
-	NB. test of UUC against umake globals
-	NB. Eg:	  test _	NB. whole table
-	NB.	5 test 7	NB. lines 5-7 
-smoutput 'i compat units uvalu  unitv uvalx unitx (>>) \\ i{UUC'
-for_i. x to (y <. <:#UUC) do.
-if. i=i{compat do.
-  z=. ''			NB. warning flag (=ok)
-else.
-  v=. (i{compat) {uvalu		NB. the senior's ratio
-  if. v=1 do. z=. '' else. z=. '>>',": v end.
-end.
-smoutput nb i; (i{compat); (brack >i{units); (i{uvalu); (>i{unitv); (>i{uvalx); (>i{unitx); z ; '\\' ; (i{UUC)
-end.
-)
+ucode=: 1&$: :(4 : 0)
 
-testf=: 3 : 0
-if. 0=#y do. y=. 123.4567 end.
-	NB. test: format (and friends)
-for_no. ;:'eur gbp usd deg ! c eV Hz rad / *' do.
-	nom=. ,>no
-	smoutput nb nom ; TAB ; nom format y
-end.
-)
 
-ucode=: 3 : 0
-	NB. subst (x=1) symbol for PI etc and back again (x=0)
-1 ucode y	NB. forces (wchar) by default (x=1)
-:
+
+y=. utf8 y
 if. x do.
-  if. ((,SL)-:,y) or (0=UNICODE) do. y return. end.
-  7 u: (deslash y) rplc ,cspel,.csymb
-else.	NB. convert y back to utf-8 before rplc...
-  0 deslash (8 u: y) rplc ,csymb,.cspel
+  if. -.isascii y do. y return. end.
+  ]z=. y rplc ,cspel,.csymb
+
+  if. 'u'={.z do. z=. 'µ',}.z end.
+else.
+  if. isascii y do. y return. end.
+
+  ]z=. y rplc HD;SP
+  ]z=. undeslash z rplc ,csymb,.cspel
+
+  if. z begins ,'µ' do. z=. 'u',2}.z end.
 end.
 )
 
-ucods=: 3 : 0
-	NB. subst (x=1) symbol for PI etc and back again (x=0)
-	NB. c/f ucode, but this version ignores currency symbols
-1 ucods y
-:
-sav=. cspel ;< csymb
+ucods=: 1&$: : (4 : 0)
+
+SAV=. cspel ;< csymb
 'cspel csymb'=: sspel ;< ssymb
 z=. x ucode y
-'cspel csymb'=: sav
-z
+z [ 'cspel csymb'=: SAV
 )
 
-udat=: 4 : 0
-	NB. raw boxed data from y=. seltext''
-  NB. x=0 -const
-  NB. x=1 -formula
-'y zdesc'=. ']'cut y
+udat=: (4 : 0)"1
+
+
+
+'y zdesc'=. 2{. ']'cut y
 zdesc=. dltb zdesc -.TAB
-'y znits'=. '['cut y
-NB. 'z y'=. '}'cut y	NB. WITHDRAWN: leading {**}
-if. x do.		NB. return fields for a formula
+'y znits'=. 2{. '['cut y
+select. x
+case. 1 do.
   zfmla=. deb y-.TAB
   zdesc; znits; zfmla
-else.
-zvalu=. (i=. y i. SP){.y=. deb y-.TAB
-znitv=. }.i}.y
+case. 0 do.
+  zdesc; znits; 1
+case. _1 do.
+  zvalu=. (i=. y i. SP){.y=. deb y-.TAB
+  znitv=. }.i}.y
   zdesc; znits; znitv; zvalu
 end.
 )
 
-udiv=: 4 : 0
-	NB. divide 2 generalized units-strs: x y
-	NB. For use by (eg): combine in: cal
-	NB. The simple result: x,SL,y is ok unless y is a complex of units
-	NB. in which case y must be tokenised and inverted piecemeal.
-if. any (SP,SL) e. y do.
-  z=. 1 cnvi utoks y	NB. invert tokenised y
-  x , ;z		NB. combine x, z as if multiplied.
-else.
-  x,SL,y		NB. the simple solution
-end.
-)
+make_units=: 0&$: :(4 : 0)
 
-udumb=: 3 : 0
-'zdesc znits znitv zvalu'=. y
-zdesc; znits; 1		NB. assume 1 nominal unit is only ever required
-)
 
-umake=: 3 : 0
-0 umake y	NB. x=0: DONT adjust currency
-:
-	NB. make globals: cspel csymb mks mkss units unitv uvalu unitx uvalx compat
-	NB. (cspel csymb) -used by: ucode to convert units: unicode<-->ascii
-	NB. (sspel ssymb_ -used by: ucods (ditto, omits currency symbols)
-sess_umake 'umake: enters...'
-sspel=: <;._1 ' PI mu Ang Ohm ^-1 ^-2 ^-3 ^-4 ^2 ^3 ^4'
-ssymb=: <;._1 '|π|µ|Å|Ω|⁻¹|⁻²|⁻³|⁻⁴|²|³|⁴'
-	NB. cspel,csymb converts these also...
-cspel=: sspel, <;._1 ' deg amin asec eur cnt gbp'
-csymb=: ssymb, <;._1 '|°|''|"|€|¢|£'
-	NB. mks (c/f 'm kg s') specifies the most primitive SI-units
-	NB. mkss is used by: cnvnon<--convert to identify reducible units
-NB. mks=: ;:'m kg s A K cd mol rad eur' NB. <<<set in ONLOAD
-mkss=: (SP,each mks),(SL,each mks),<,SL
-units=: unitv=: uvalu=: 0$0
-for_i. iu=.i.#UUC do.
-  'zdesc znits znitv zvalu'=. 0 udat i{UUC
-  if. x and quoted znits do.
-    sess_umake i ; znits ; zvalu ; '=:' ; %exrate znits
-    zvalu=. ": %exrate znits
-  end.
-  units=: units,<,znits		NB. nominal units
-  unitv=: unitv,<,znitv		NB. based-on units
-  uvalu=: uvalu,eval zvalu	NB. conversion ratio as given
-end.
-z=. |: > 0 convert each units
-unitx=: 0{z	NB. canonical units
-cycs=. ;1{z	NB. diagnostic: loops needed by: convert
-uvalx=: ;2{z	NB. conversion ratio to canonical units
-compat=: unitx i. unitx		NB. compat-code: > earlier UUC-row#
-	NB. z is boolean mask for: (units)
-z=. cycs=0
-z=. z or (isNaN uvalu) or (uvalu e. 0 _ __)
-z=. z or (isNaN uvalx) or (uvalx e. 0 _ __)
-if. any z do.
-  t=. ;,((I.z){units) ,. (brack each I.z),.<' '
-  msg=. '>>> WARNING: these units convert badly:',LF,t
-  wd 'mb TABULA_UU ',dquote msg
-end.
-cx''	NB. check if any noun has become complex
-sess_umake 'umake: ...exits'
+
+
+sspel=: <;._1 ' PI Ang Ohm ^-1 ^-2 ^-3 ^-4 ^2 ^3 ^4'
+ssymb=: <;._1 '|π|Å|Ω|⁻¹|⁻²|⁻³|⁻⁴|²|³|⁴'
+
+cspel=: sspel, <;._1 ' deg amin asec'
+csymb=: ssymb, <;._1 '|°|′|″'
+'v uv us'=: <"1 |: cutuuc UUC
+openv=: >v
+unitv=: deb each uv -.each TAB
+units=: deb each us
+uvald=: ieval openv
+assert. notFloat rvald=: ireval openv
+uvalu=: eval openv
+assert. notFloat rvalu=: reval openv
 i.0 0
 )
 
+uniform=: ''&$: :(4 : 0)
+
+
+
+if. 0=#x do. sic=. SIC else. sic=. x end.
+msg '+++ uniform: ENTERED: x=(x) sic=(sic)  y=(y)'
+
+y=. utf8 deb y
+select. sic
+case. 0 do.
+  z=. bris y
+case. 1 do.
+  z=. undotted y
+
+  if. 1< +/SL=y do. z=. slash1 z end.
+  z=. ucode z
+fcase.2 do.
+case. 3 do.
+  if. SL ident y do.
+    msg '--- uniform: y=(crex y) returns NIL'
+    NIL return.
+  end.
+  ]z=. bris y
+  ]z=. ucode deslash unslash1 z
+  if. sic=3 do. z=. dotted z end.
+end.
+z return.
+)
+
 undeg=: 3600 %~ _ 60 60 #. 3 {. ]
-upost=: 4 : 'y,(x#~*UNICODE)'
-upref=: 4 : '(x#~*UNICODE),y'
+undotted=: 0&dotted
+unslash1=: 0&slash1
+unucode=: 0&ucode
+uurowsc=: 4 : '(UUC ssmx y){UUC [UCASE=: x'
+uurowsf=: 4 : '(UUF ssmx y){UUF [UCASE=: x'
+listedUnits=: 3 : 'units e.~ <,y'
 
-utab=: 3 : 0
-	NB. TEST diagnostics table of caches
-smoutput nb 'units' ;TAB; 'uvalu' ;TAB; 'uvalx'
-if. 0=#y do. y=. i.#units end.
-for_i. y do.
-  smoutput nb i ; (brack >i{units) ;TAB; (iu=.i{uvalu) ;TAB; (ix=.i{uvalx)
-  if.-. iu=ix do.
-    smoutput TAB,'>>> uvalu not equal to uvalx'
-  end.
-end.
-)
+state=: 3 : 0
 
-utoks=: 3 : 0
-	NB. tokenize y, ensuring leading SP|SL
-z=. sp1 y	NB. ensure leading sign-byte: SP|SL
-z=. (z e. SP,SL) <;.1 z
-)
-
-uu=: 3 : 0
-	NB. transform y (value;units) to: x (ux)
-'' uu y
-:
-	NB. x is target units: ux
-	NB. y is value;units
-NB. x_uu_=: x [ y_uu_=: y
-err=. 4 : 'if. x-:''literal'' do. y else. 0 ; y end.'
-select. dy=. datatype y
-case. 'literal' do.
-  val=. eval ' 'taketo y
-  uns=. 0 ucode ' 'takeafter y
-case. 'boxed' do.
-  'val uns'=. y
-case. do.
-  smoutput nb '>>> cannot handle:' ; y
-  '' return.
-end. 
-ux=. 0 ucode x		NB. de-unicoded x
-if. 0~:#x do.
-  if. -. uns compatible ux do.
-    z=. nb '>>> incompatible units:' ; x ; uns
-    dy err z return.
-  end.
-end.
-'uy c fy'=. convert uns	NB. y is in SI units
-if. fy=_ do.
-  z=. nb '>>> unknown units:' ; uns
-  dy err z return.
-end.
-if. 0=#x do. x=. ux=. uy end.
-fx=. >{: convert ux
-z=. (fy%fx) * ('_',uns) adj val
-if. dy-:'literal' do.
-  z=. (ucode 8 u: ux format z),SP,(ucode x)
+sv=. b4o 'SIC SCI SIG SIZ'
+if. 0=#y do.
+  ".}:;sv,.<';'
 else.
-  z=. (ux adj z) ; (ucode x)
+  sv=. (#y){.sv
+  (sv{.~#y)=: y
+end.
+)
+trace=: 3 : 0
+
+
+
+if. y do.
+  msg=: smoutput&sw
+  sllog=: smoutput&llog
+else.
+  msg=: empty
+  sllog=: empty
+end.
+i.0 0
+)
+canc=: 4 : 0
+
+
+
+
+
+msg '+++ canc: x=[(x)] y=[(y)]'
+z=. SP ,~ sp1 x
+n=. SP,y
+d=. SL,y
+whilst. -. w-:z do.
+  w=. z
+
+  z=. z rplc (n,d,SP);SP ; (n,d,SL);SL
+  msg '... canc:   z=[(z)] n=[(n)] d=[(d)]'
+end.
+dtb z return.
+)
+
+coll=: 4 : 0
+
+
+
+
+msg '+++ coll: x=[(x)] y=[(y)]'
+z=. ,x
+n=. SP,y
+d=. SL,y
+for_p. 4 3 2 do.
+  z=. z rplc ((p*$n)$n);(n,PW,":p) ; ((p*$d)$d);(d,PW,":p)
+  msg '... coll:     n=[(n)] d=[(d)] p=(p) --> z=[(z)]'
+end.
+z return.
+)
+
+diss=: 3 : 0
+
+
+for_cboxed. y [z=.'' do. c=. >cboxed
+  p=. 1 >. {. ". PW takeafter c
+  z=. z, p# <PW taketo c
+end.
+z return.
+)
+
+selfcanc=: 3 : 0
+
+
+
+z=. ; |.each sort |.each ut=. diss utoks bris y
+msg '+++ selfcanc: y=(y) --> z=[(z)]'
+
+for_cboxed. ~. }.each ut do. c=. >cboxed
+  z=. z canc c
+  z=. z coll c
+  msg '... selfcanc: c=[(c)] --> z=[(z)]'
+end.
+z=. selfcancFix dlb canon z
+msg '--- selfcanc: RETURNS: z=(z)'
+z return.
+)
+
+selfcancFix=: 3 : 0
+
+y rplc '/^0';'/';'/^1';'/';'/^2';'/';'/^3';'/';'/^4';'/';'/^5';'/';'/^6';'/';'/^7';'/';'/^8';'/';'/^9';'/'
+)
+udiv=: 4 : 0
+
+
+x=. bris x
+y=. bris y
+if. y ident SL do. uniform x return. end.
+if. 0 = #y     do. uniform x return. end.
+
+z=. selfcanc ; (utoks x) , (cnvi utoks y)
+if. udivCodesOk x;y;z do. uniform z
+else. ERROR_UDIV
 end.
 )
 
-uunicode=: 3 : 0
-	NB. read/set UNICODE flag
-if. 0=#y do. UNICODE
-else. UNICODE=: {.y
+udivCodesOk=: 3 : 0
+
+'x y z'=. y
+codex=. 2 pick qtcode4anyunit x
+codey=. 2 pick qtcode4anyunit y
+codez=. 2 pick qtcode4anyunit z
+if. codez = codexy=.codex%codey do. 1
+else. 0 [ smoutput llog 'BAD codez z codex x codey y codexy'
+end.
+)
+onload 'smoutput (,.z) ; scino z=.0 1 1.0 1.23 1.230 123 12300 123000000 123.0 123.000'
+
+'==================== [uu] uuverb.ijs ===================='
+0 :0
+Wednesday 6 May 2020  11:10:46
+)
+
+cocurrent 'uu'
+
+uu=: (''&$: :(4 : 0))"1
+
+if. '*'={.y do. uuengine }.y return. end.
+if. isBoxed y do.
+  'valu unit'=. y
+  rvalu=. rat valu
+elseif. isReal y do.
+  valu=. y
+  rvalu=. x: y
+  unit=. ,'/'
+  unit=. ,'*'
+elseif. isStr y do.
+  yf=. dltb formatIN y
+  valu=. valueOf yf
+  rvalu=. rvalueOf yf
+  unit=. unitsOf yf
+elseif. do.
+  valu=.  BADFLOAT
+  rvalu=. BADRAT
+  unit=.  BADUNITS
+end.
+sllog 'uu x y valu rvalu unit'
+
+if. cannotScale unit do.
+  'targ rdisp rfactor'=. x convert unit
+  rvtarg=. rvalu
+elseif. 0=#x do.
+  'targ rdisp rfactor'=. convert unit
+  rvtarg=. (rfactor * rvalu) + rdisp
+elseif. do.
+  'targ rdisp rfactor'=. x convert unit
+  rvtarg=. rfactor * (rvalu + rdisp)
+end.
+
+UU_VALUE=: rvtarg
+z=. targ formatOUT rvtarg
+sllog 'uu_3 z rvtarg VEXIN'
+
+if. NO_UNITS_NEEDED do. z else. deb z,SP,uniform targ end.
+)
+
+rvalueOf=: 3 : 0
+
+
+try. val=. reval strValueOf y
+catch. BADRAT end.
+)
+
+valueOf=: 3 : 0
+
+
+try. val=. ". strValueOf y
+catch. _. end.
+)
+
+strValueOf=: 3 : 0
+
+
+
+SP taketo deb y rplc '°' ; SP ; 'deg' ; SP
+)
+
+unitsOf=: 3 : 0
+
+numeral=. strValueOf y
+deb y }.~ #numeral
+)
+
+onload }: 0 :0
+smoutput (x=:'m^2') uu (y=:'1 mm^2') [smclear''
+)
+0 :0
+smoutput (x=:'degF') uu (y=:'100 degC') [smclear''
+smoutput uu '212 degF'
+smoutput (x=:'ft/s^2') uu y=:'1 Å h⁻²'
+smoutput 'yd' uu 2r3 ; 'ft'
+)
+
+'==================== [uu] pp_encoding.ijs ===================='
+0 :0
+Corrected qtcode4anyunit: IAC Wednesday 6 May 2020  10:59:09
+wd'msgs'
+)
+cocurrent 'uu'
+
+UNSETCODE=: BADCODE=: KILLERCODE=: ZEROCODE=: 0x
+TRIVIALCODE=: 1x
+Nmks=: #mks
+
+Pmks=: x:p:i.Nmks
+
+randompp=: 3 : '? Nmks#>:y'
+encoded=:  3 : '*/ Pmks ^ y'
+decodedx=: 3 : 'x:^:_1 Nmks q: y'
+decodedr=: 3 : 'x:^:_1 -/decodedx 2 x: y'
+decoded=: decodedx :: decodedr
+
+expandcode=: (0&$: :(4 : 0))"0
+
+if. y=0 do. ,ST return. end.
+asTokens=. x
+for_p. decoded y[z=.'' do.
+  unit=. p_index pick mks
+  SS=. (p<0){SP,SL
+  select. p
+  case.  0 do. cell=. 0
+  case.  1 do. cell=. SP,unit
+  case. _1 do. cell=. SL,unit
+  case.    do. cell=. SS,unit,PW,":|p
+  end.
+  if. p~:0 do.
+
+    if. asTokens do. z=. z,<cell else. z=. z,cell end.
+  end.
+end.
+if. asTokens do. z else. dlb z end.
+)
+isGoodCode=: ([: -. (ZEROCODE,%ZEROCODE) e.~ ])"0
+
+make_unitc=: 1&$: :(4 : 0)
+
+
+ssw=. empty
+pass=. x
+rebuild=. pass<:1
+ssw '+++ make_unitc: pass=(pass) rebuild=(rebuild) #UUC=(#UUC)'
+if. rebuild do.
+  ssw=. empty
+  uvalc=:(#UUC)$0
+  rvalc=:(#UUC)$0r1
+  unitc=:(#UUC)$UNSETCODE
+end.
+for_i. i.#UUC [n=.0 do.
+  val=. i{uvalc [code=. i{unitc
+  rval=. i{rvalc
+  if. (-. isGoodCode code) or (0=rval) do.
+    ssw '--- id=(i) val=(val) code=(crex code) [(i pick units)]'
+
+    'val rval code'=. qtcode4i i
+    ssw '--- id=(i) val=(val) rval=(rval) code=(crex code)(LF)'
+    uvalc=: val  i}uvalc
+    rvalc=: rval i}rvalc
+    unitc=: code i}unitc
+    n=. n+1
+    assert. 64 128 e.~ 3!:0 unitc
+  end.
+end.
+n return.
+)
+
+qtcode4i=: (3 : 0)"0
+
+if. (y<0) or (y>:#UUC) do. 0;BADCODE return. end.
+]valu=.    y{uvalu
+]ralu=.    y{rvalu
+]valc=.    y{uvalc
+]ralc=.    y{rvalc
+]vald=.    y{uvald
+]rald=.    y{rvald
+]units_y=. y pick units
+]unitv_y=. y pick unitv
+
+if. unitv_y -: ,SL do. valu;ralu;TRIVIALCODE return. end.
+if. unitv_y -: ,ST do. 1;1r1;KILLERCODE return. end.
+
+if. Nmks > i=. mks i. <,units_y do. 1;1r1;i{Pmks return. end.
+code=. y{unitc
+msg '(LF)+++ qtcode4i[(y)]: units_y=[(units_y)] unitv_y=[(unitv_y)] code=(crex code)'
+
+
+if. -. code e. UNSETCODE,BADCODE do.
+  msg '--- qtcode4i: VALID1 code=(crex code) valu=(valu) valc=(valc) valu*valc=(val)'
+  msg '--- qtcode4i: VALID1 code=(crex code) ralu=(ralu) ralc=(ralc) ralu*ralc=(ral)'
+  (valu*valc);(ralu*ralc);code return.
+end.
+
+'valc ralc code'=. qtcode4anyunit unitv_y
+msg '... qtcode4i: valc=(valc) ralc=(ralc) code=(crex code) from: qtcode4anyunit ''(unitv_y)'''
+if. code e. UNSETCODE,BADCODE do.
+  msg '--- qtcode4i: invalid-code=(crex code)'
+  0;0r1;BADCODE
+else.
+  val=. valu*valc
+  ral=. ralu*ralc
+  msg '--- qtcode4i: VALID2 code=(crex code) valu=(valu) valc=(valc) ralu=(ralu) ralc=(ralc) valu*valc=(val) ralu*ralc=(ral)'
+  val;ral;code
 end.
 )
 
-uurowsc=: 3 : '(UUC ssmx y){UUC'
-uurowsf=: 3 : '(UUF ssmx y){UUF'
-validunits=: 3 : 'units e.~ <,y'
+qtcode4bareunit=: 3 : 0
 
-NB. ========== z-LOCALE ==========
 
-cocurrent 'z'
-
-TPATH_UU=: 3 : 0 ''
-	NB. returns directory containing this script
-	NB. also assigns global: WHEREAMI -the folder in question
-	NB. plus SEP -the platform-dependent path-separator.
-ws=. [: 'Not from script'"_`({ 4!:3@(0&$))@.(0&<:) [: 4!:4 [: < >
-WHEREAMI=: '<UNSET>'	NB. needed for ws to work with
-z=. >ws 'WHEREAMI'
-SEP=: '/\' {~ '\' e. z
-WHEREAMI=: (>: z i: SEP) {.z
+i=. units i. <,y
+msg '+++ qtcode4bareunit[(y)] id=(i) #uvalc=(#uvalc)'
+if. (i<0) or (i >: #UUC) do. 0;0r1;BADCODE return. end.
+valc=. i{uvalc
+ralc=. i{rvalc
+code=. i{unitc
+msg '--- qtcode4bareunit[(y)] id=(i) valc=(valc) ralc=(ralc) code=(crex code)'
+valc;ralc;code
 )
 
-TPATH_UUC=: TPATH_UU , 'uuc.ijs'
-TPATH_UUF=: TPATH_UU , 'uuf.ijs'
+qtcode4anyunit=: 3 : 0
 
-uu=: uu_uu_
-uuc=: 3 : 'open TPATH_UUC'
-uuf=: 3 : 'open TPATH_UUF'
-uunicode=: uunicode_uu_
 
-start_uu_ ''
 
-0 : 0
-	NB. Sample statements to test verb: uu
-   uunicode 0	NB. no unicode
-   uunicode 1	NB. unicoded with slashes
-   uunicode 2	NB. unicoded with negative powers
-   		uu '100 degC'
-   		uu '212 degF'
-   'degC' 	uu '100 degC'
-   'degF' 	uu '100 degC'
-   'degC' 	uu '212 degF'
-   'degC' 	uu 373.16 ; 'K'
-   'degF' 	uu 373.16 ; 'K'
-   'Fahrenheit'	uu 373.16 ; 'K'
-   'Centigrade'	uu 373.16 ; 'K'
-   'Celsius' 	uu 373.16 ; 'K'
-   'degC' 	uu '373.16 K'
-   'degF' 	uu '373.16 K'
-   'Fahrenheit'	uu '373.16 K'
-   'Centigrade'	uu '373.16 K'
-   'Celsius'	uu '373.16 K'
-   uu '1 Ohm'
-   'Ω' uu '6.000 kg m²/A²/s³'
-   'Ohm' uu '6.000 kg m²/A²/s³'
-   'Ω' uu '6.000 kg m^2/A^2/s^3'
-   'Ohm' uu '6.000 kg m^2/A^2/s^3'
-   uu '6.000 kg m²/A²/s³'
-   uu '6.000 kg m^2/A^2/s^3'
-   uu '1 d'
-   uu '1 /d'
-   uu 1 ; '/d'
-   'Hz' uu 1 ; '/d'
-   'Hz' uu '1 /d'
-   'note' uu '1 /d'
-   'note' uu '440 Hz'	NB. A440 pitch standard
+if. (,SL)-: ,y do. 1;1r1;TRIVIALCODE return. end.
+if. (,ST)-: ,y do. 1;1r1;KILLERCODE return. end.
+r=. v=. z=. 0$0x
+for_t. utoks y do.
+  'invert scale bareunit power'=. cnvCunit cunit=.>t
+  scale=. scale ^ power
+  if. invert do. scale=. %scale end.
+  rscale=. rational scale
+  rpower=. rational power
+  'valu ralu code'=. qtcode4bareunit bareunit
+sllog 'cunit invert scale bareunit power code valu ralu rscale rpower'
+  if. invert do.
+    z=. z , % (code^power)
+    v=. v , scale % (valu^power)
+    assert. notFloat r=. r , rscale % (ralu^rpower)
+  else.
+    z=. z , code^power
+    v=. v , scale * (valu^power)
+    assert. notFloat r=. r , rscale * (ralu^rpower)
+  end.
+end.
+muv=. */v
+mur=. */r
+muz=. */z
+msg '--- qtcode4anyunit: y=[(y)] v=[(v)] muv=(muv) mur=(mur); z=[(crex z)] muz=(muz)'
+muv;mur;muz return.
 )
+
+cnvCunit=: 3 : 0
+
+msg '+++ cnvCunit: y=(y)'
+z=. dltb y
+k=. p=. 1
+
+if. (SL~:{.z) and ((any PWM E. z) or (any PWU E. z)) do.
+  z=. SL,z rplc PWM ; PW ; PWU ; PW
+end.
+
+if. j=.(SL={. sp1 z) do. z=. }.z end.
+if. PW e. z do.
+
+  'p z'=. (".{:z) ; (}:}:z)
+end.
+msg '... cnvCunit: y=(y) z=(z) j=(j) p=(p)'
+
+
+if. (-.iskg z) and (-.listedUnits z) do.
+  'k z'=. scale4bareunit z
+end.
+msg '--- cnvCunit: j=(j) k=(k) z=(z) p=(p)'
+j ; k ; z ; p return.
+)
+
+
+
+
+
+
+
+
+
+
+
+scale4bareunit=: 3 : 0
+
+
+
+z=. ,y
+k=. 1
+
+dalen=. #da=. 'da'
+mulen=. #mu=. 'µ'
+
+if. 1=#('/'taketo z) do. k;z return. end.
+if. da-:('/'taketo z) do. k;z return. end.
+if. mu-:('/'taketo z) do. k;z return. end.
+
+if.     z beginsWith da do.	k=. 1e1  [ z=. dalen}.z
+elseif. z beginsWith mu do.	k=. 1e_6 [ z=. mulen}.z
+elseif. do.
+
+  select. {.z
+  case. 'h' do. k=. 1e2	[ z=.}.z
+  case. 'k' do. k=. 1e3	[ z=.}.z
+  case. 'M' do. k=. 1e6	[ z=.}.z
+  case. 'G' do. k=. 1e9	[ z=.}.z
+  case. 'T' do. k=. 1e12	[ z=.}.z
+  case. 'P' do. k=. 1e15	[ z=.}.z
+  case. 'E' do. k=. 1e18	[ z=.}.z
+  case. 'Z' do. k=. 1e21	[ z=.}.z
+  case. 'Y' do. k=. 1e24	[ z=.}.z
+  case. 'd' do. k=. 1e_1	[ z=.}.z
+  case. 'c' do. k=. 1e_2	[ z=.}.z
+  case. 'm' do. k=. 1e_3	[ z=.}.z
+  case. 'u' do. k=. 1e_6	[ z=.}.z
+  case. 'n' do. k=. 1e_9	[ z=.}.z
+  case. 'p' do. k=. 1e_12	[ z=.}.z
+  case. 'f' do. k=. 1e_15	[ z=.}.z
+  case. 'a' do. k=. 1e_18	[ z=.}.z
+  case. 'z' do. k=. 1e_21	[ z=.}.z
+  case. 'y' do. k=. 1e_24	[ z=.}.z
+  end.
+end.
+z=. deb z
+k ; z
+)
+
+compatible=: 4 : 0
+
+
+    if. ('*' ident x) or ('*' ident y) do. 1 return.
+elseif. ('!' ident x) or ('!' ident y) do. 1 return.
+end.
+xcode=. >{: qtcode4anyunit bris x
+ycode=. >{: qtcode4anyunit bris y
+xcode -: ycode
+)
+
+compatlist=: 3 : 0
+
+]ycode=. >{: qtcode4anyunit y
+(ycode=unitc) # units
+)
+
+convert=: 3 : 0"1
+
+yb=. bris y
+disp=. displacement yb
+rdisp=. rdisplacement yb
+msg '+++ convert: ENTERED: y=(y) yb=(yb) disp=(disp) rdisp=(rdisp)'
+'factor rfactor code'=. qtcode4anyunit yb
+targ=. canon expandcode code
+msg '--- convert: EXITS'
+targ ; rdisp ; rfactor
+:
+
+
+'ytarg yrdisp yrfactor'=. z=.convert y
+if. 0=#x do. z return. end.
+'xtarg xrdisp xrfactor'=. convert x
+if. (xtarg-:ytarg) or (xtarg ident '*') or (ytarg ident '*') do.
+  rfactor=. yrfactor % xrfactor
+  rdisp=. (yrdisp-xrdisp)%yrfactor
+  x ; rdisp ; rfactor
+elseif. do.
+  msg '>>> convert: incompatible units: x=[(x)] y=[(y)]'
+  x ; 0x ; 0x
+end.
+)
+0 :0
+'t d f'=: 'degC' convert_uu_ 'degF'
+]float d,f
+]float C=: f*(F+d)  [F=:212
+]t
+'t d f'=: 'degF' convert_uu_ 'degC'
+]float d,f
+]float F=: f*(C+d)  [C=:100
+)
+
+scale_displace=: 4 : 0
+
+'coeft coefu dispt dispu'=. z=: x,(4-~#x){.1 1 0 0
+vaSI=. dispu + y*coefu
+(vaSI-dispt)%coeft
+)
+
+
+uniformD=: 3 : 0
+
+brack sval=: strValueOf y
+brack unit=: uniform unitsOf y
+]sval,SP,unit
+)
+
+cannotScale=: 3 : 'CANNOTSCALE e.~ <deb y'
+
+
+onload 'qtcode4anyunit ''/mm^2'''
+
+'==================== [uu] format.ijs =================='
+0 :0
+Thursday 6 June 2019  02:32:59
+)
+cocurrent 'uu'
+
+
+local_format_test=: 3 : 0
+SIG=:9 [sav=.SIG
+trace 0
+sm 'degF' uu '1.1 degC'
+sm 'degF' uu '1.1°C'
+sm 'deg' uu '1 rad'
+sm 'dms' uu '1 rad'
+sm 'hms' uu '3700 s'
+sm 'hms' uu '1.1 h'
+sm '*' uu '1.1 h'
+sm 'note' uu '440 Hz'
+sm '*' uu 1.23
+sm '*' uu 1230000000
+sm '*' uu '440 Hz'
+sm '!' uu 2
+sm '!' uu 1
+sm '!' uu '1 /'
+sm '!' uu '1 *'
+sm '!' uu 0
+sm '!' uu '0 /'
+sm '!' uu '0 *'
+sm uu '_ /'
+SIG=: sav
+)
+
+format=: formatOUT=: ''&$: :(4 : 0)
+
+
+msg '+++ format: x=[(x)] y=[(y)]'
+NO_UNITS_NEEDED=: 0
+select. kunits=. bris x
+ case. 'deg'	do. nu deg y
+ case. 'dms'	do. nu dms y
+ case. 'hms'	do. hms y
+ case. ,'!'	do. nu yesno y
+ case. 'note'	do. nu ' note',~ note y
+case.		do. x format_misc y
+end.
+)
+
+nu=: 3 : 'y[NO_UNITS_NEEDED=:1'
+
+isTemperature=: 3 : 0
+
+if. y ident 'K' do. 0 return. end.
+by=. <deb y
+if. y beginsWith 'deg' do. -.(y-:'deg') return.
+elseif. by e. TEMPERATURE_SCALES do. 1 return.
+elseif. by e. 2 {.each TEMPERATURE_SCALES do. 1 return.
+elseif. by e. 2 {.each TEMPERATURE_SCALES do. 1 return.
+elseif. do. 0 return.
+end.
+)
+
+kdeg=: 3 : 0
+
+
+y rplc ' °' ; '°'
+)
+
+format_misc=: 4 : 0
+
+msg '+++ format_misc: x=[(x)] y=[(y)]'
+if. isUndefined y do. 'UNDEFINED' return. end.
+if. SIC>0 do. inf=. '∞' else. inf=. 'inf' end.
+    if. y=__ do. '-',inf
+elseif. y=_  do. inf
+elseif. isTemperature x do. nu kdeg sw'(scino y) (uniform x)'
+elseif. do. scino y
+end.
+)
+
+hms=: 3 : 0
+
+'hh mm ss'=.":each 24 60 60 #: y * 3600
+if. 10>".hh do. hh=. '0',hh end.
+if. 10>".mm do. mm=. '0',mm end.
+if. 10>".ss do. ss=. '0',ss end.
+sw'(hh):(mm):(ss)'
+)
+
+deg=: 3 : 0
+
+
+y=. float y
+if. SIC=0 do. sw'(y) deg'
+else.         uniform sw'(y)deg'
+end.
+)
+
+dms=: 3 : 0
+
+asec4deg=. 3600 * ]
+'d m s'=.":each <.each 360 60 60 #: asec4deg |y
+if. SIC=0 do. sw'(d) deg (m)'' (s)"'
+else.         uniform sw'(d)deg (m)amin (s)asec'
+end.
+)
+
+yesno=: 3 : 0
+
+
+if. y=0 do. ZERO return. end.
+select. ZERO
+case. 'no'	do. 'yes'
+case. 'NO'	do. 'YES'
+case. 'off'	do. 'on'
+case. 'OFF'	do. 'ON'
+case. 'lo'	do. 'hi'
+case. 'LO'	do. 'HI'
+case. 'low'	do. 'high'
+case. 'LOW'	do. 'HIGH'
+case. 'false'	do. 'true'
+case. 'FALSE'	do. 'TRUE'
+case. 		do. '~',ZERO
+end.
+)
+
+onload 'local_format_test $0'
+
+'==================== [uu] formatIN.ijs =================='
+0 :0
+Monday 6 May 2019  03:42:54
+-
+defines formatIN - input-counterpart to: format
+-
+cloned into: tempuu 44 pre-purge of FahR etc: 15 November 2018
+NOTE: tempuu 44 has useful test expressions purged from here.
+)
+
+cocurrent 'uu'
+
+registerIN=: 3 : 0
+
+
+VEXIN=: y
+)
+
+formatIN=: 3 : 0
+msg '+++ formatIN: ENTERED, y=[(y)]'
+
+blink 0
+VEXIN=: '<UNSET>'
+z=. daisychainIN y
+msg '--- formatIN: EXITS, last take_ verb: (VEXIN) kuy=(kuy) -returns z=(z)'
+z return.
+)
+
+make_daisychainIN=: 3 : 0
+
+
+>z=. 'take_' nl 3
+]z=. (; z,each <' ::'),'takerr'
+daisychainIN=: 13 : ('(',z,')y')
+i.0 0
+)
+
+takerr=: 3 : 0
+msg '>>> takerr: none chime: x=(x) y=(y)'
+sw'(y) (BADUNITS)'
+)
+
+take_0_angle=: 3 : 0
+registerIN 'take_0_angle'
+blink'green'
+
+
+
+yb=. (bris y) rplc 'deg' ; ' deg'
+]unit=. deb unitsOf yb
+assert. (unit-:'deg')or(unit-:'rad')
+yb return.
+)
+
+take_0_dms=: 3 : 0
+registerIN 'take_0_dms'
+blink'green'
+
+
+
+z=. ;: (bris y) rplc 'deg' ; ' deg' ; 'amin' ; ' amin' ; 'asec' ; ' asec'
+assert. (t=. ;:'deg asec amin') -: 3{.sortd z
+'d m s'=. ".each z-.t
+' deg',~ ": d + (m%60) + (s%3600) return.
+)
+
+take_1_hms=: 3 : 0
+registerIN 'take_1_hms'
+blink'green'
+
+assert. 2= +/CO=y
+z=. CO cut y-.SP
+'h m s'=. ".each z
+' s',~ ": (h*3600) + (m*60) + s return.
+)
+
+take_8_misc=: 3 : 0
+registerIN'take_8_misc'
+blink 'blue'
+
+if. isUndefined y do. 'UNDEFINED' return. end.
+if. SIC>0 do. infinity=. '∞' else. infinity=. 'infinity' end.
+if. y=__ do. '-',infinity return.
+elseif. y=_ do. infinity return.
+end.
+assert. 0
+)
+
+take_9_general=: 3 : 0
+registerIN'take_9_general'
+blink'white'
+
+
+z=. y
+msg '... take_9_general: y=(y) --> z=(z)'
+z return.
+)
+
+make_daisychainIN''
+
+'==================== [uuengine] uu_interface ===================='
+
+0 :0
+Friday 10 May 2019  16:11:59
+-
+(Pass-thru CAL instructions are identical to these.)
+(string | boxed) y is a uuengine instruction.
+…Lowercase instructions change the state of UU
+…Uppercase instructions simply return requested info
+ and DO NOT change the state of UU
+)
+
+cocurrent 'uu'
+
+uuengine=: 3 : 0
+
+if. isBoxed y do.
+  'inst y1 y2 y3'=. 4{.y
+  select. inst
+  case. 'CONV' do. y2 convert y1
+  case. 'FMTI' do. formatIN nb }.y
+  case. 'FMTO' do. y2 formatOUT y1
+  case. 'UDIV' do. y2 udiv y1
+  case. 'UUUU' do. y3 uu 1 2{y
+  case.        do. '>>> uuengine: bad instruction:';y
+  end.
+  return.
+end.
+
+yy=. dlb 4}.y=. dltb y
+select. 4{.y
+case. 'CPAT' do.
+	('>'takeafter yy) compatible '>'taketo yy
+case. 'CPLI' do.
+	compatlist yy
+case. 'CNVJ' do.
+	cnvCunit yy
+case. 'CONV' do.
+	('>'takeafter yy) convert '>'taketo yy
+case. 'CONS' do.
+	0&udat yy
+case. 'DISP' do.
+	rdisplacement unucode yy
+case. 'FUNC' do.
+	1&udat yy
+case. 'FMTI' do.
+	formatIN yy
+case. 'FMTO' do.
+	(unitsOf yy) format valueOf yy
+case. 'QRAT' do.
+	UU_VALUE
+case. 'QSCI' do.
+	SCI
+case. 'QSIC' do.
+	SIC
+case. 'QSIG' do.
+	SIG
+case. 'QSIZ' do.
+	SIZ
+case. 'QZER' do.
+	ZERO
+case. 'SCIN' do.
+	scino ".sci2j yy
+case. 'SELF' do.
+	selfcanc yy
+case. 'UCOD' do.
+	ucode yy
+case. 'UCOS' do.
+	ucods yy
+case. 'UNUC' do.
+	0&uniform yy
+case. 'UDIV' do.
+	('>'takeafter yy) udiv~ '>'taketo yy
+case. 'UNIF' do.
+	uniform yy
+case. 'UUUU' do.
+	('>'takeafter yy) uu '>'taketo yy
+case. 'VUUC' do.
+	x2f 0 uurowsc yy
+case. 'VUUF' do.
+	x2f 0 uurowsf yy
+case. 'VUUM' do.
+	x2f UUM
+case. 'WUUC' do.
+	x2f 1 uurowsc yy
+case. 'WUUF' do.
+	x2f 1 uurowsf yy
+case. 'WUUM' do.
+	x2f UUM
+case. 'fcty' do.
+	factory''
+case. 'ssci' do.
+	SCI=: {.".yy
+case. 'ssic' do.
+	SIC=: {.".yy
+case. 'ssig' do.
+	SIG=: {.".yy
+case. 'ssiz' do.
+	SIZ=: {.". sci2j yy
+case. 'strt' do.
+	start''
+case. 'szer' do.
+	ZERO=: yy
+case.        do. '>>> uuengine: bad instruction:';y
+end.
+)
+
+'==================== [uu] start ===================='
+0 :0
+Sunday 12 May 2019  16:49:54
+)
+
+cocurrent 'uu'
+
+VERSION=: '?.?.?'
+
+DIAGNOSTICS=: 0
+CAPPED=: 40
+
+start=: 3 : 0
+
+
+
+
+
+
+trace DIAGNOSTICS
+msg '+++ [uu] start: ENTERED. y=(y)'
+loadFixed PARENTDIR sl 'handy4uu.ijs'
+
+loadFixed PARENTDIR sl 'tpathjal.ijs'
+loadFixed TPMU sl 'manifest.ijs'
+
+erase'CAPTION FILES DESCRIPTION RELEASE FOLDER LABCATEGORY PLATFORMS'
+
+trace 0
+factory''
+if. isNo y do. SIC=: y end.
+
+RT2_z_=:   CAPPED s4x REF_RT2
+EXP_z_=:   CAPPED s4x REF_EXP
+PI_z_=:    CAPPED s4x REF_PI
+PI2_z_=:   PI * 2
+PI4_z_=:   PI * 4
+PIb2_z_=:  PI * 1r2
+PIb3_z_=:  PI * 1r3
+PIb4_z_=:  PI * 1r4
+PI4b3_z_=: PI * 4r3
+
+loadFixed TPUC sl 'uuc.ijs'
+loadFixed TPUF sl 'uuf.ijs'
+loadFixed TPUM sl 'uum.ijs'
+make_units''
+make_unitc''
+rat_check''
+report_complex_nouns''
+trace DIAGNOSTICS
+msg '--- [uu] start: COMPLETED.'
+)
+
+loadFixed=: 3 : 0
+try. load y
+catch.
+  try. load z=. dquote y
+  catch.
+    smoutput '>>> start_uu_ cannot load script at path: ',z
+    assert 0 ['abort start_uu_'
+  end.
+end.
+)
+
+create=: start
+destroy=: codestroy
+
+uu_z_=: uu_uu_
+blink=: empty
+
+start''
