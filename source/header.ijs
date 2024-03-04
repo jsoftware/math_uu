@@ -13,4 +13,4 @@ onload_z_=: empty
 
 PARENTDIR=: (zx i:'/'){.zx=.jpathsep>(4!:4<'zx'){4!:3''[zx=.''
 
-AABUILT=: '2020-06-29  23:36:34'
+BUILTAT

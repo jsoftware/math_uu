@@ -10,7 +10,7 @@ NOTE: tempuu 44 has useful test expressions purged from here.
 )
 
 cocurrent 'uu'
-	
+
 registerIN=: 3 : 0
   NB. for use in take_ verbs only
   NB. reports the last take_* verb to be entered

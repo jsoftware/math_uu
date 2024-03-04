@@ -134,7 +134,7 @@ trim0=: 3 : 0
   NB. trim zeros from scientific numeral
 if. 'E' e. y do.
   'n m'=. 'E'cut y
-  z=. (trim0 n),'E',m 
+  z=. (trim0 n),'E',m
   z return.
 end.
 z=. deb y
