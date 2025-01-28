@@ -9,7 +9,7 @@ require 'math/uu/handy4uu'
 coclass 'uu'
 onload_z_=: empty
 
-PARENTDIR=: (zx i:'/'){.zx=.jpathsep>(4!:4<'zx'){4!:3''[zx=.''
+PARENTDIR=: ({.~ i:&'/') jpathsep>(4!:4<'PARENTDIR'){4!:3''[PARENTDIR=: ''
 
 AABUILT=: '2024-03-03  23:00:22'
 

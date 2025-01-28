@@ -2,7 +2,7 @@ NB. math/uu manifest
 
 CAPTION=: 'Scientific units conversion package'
 
-VERSION=: '2.1.27'
+VERSION=: '2.1.28'
 NB. ┌───────────────────────────────────────────────────┐
 NB. │>>> BEFORE JAL RELEASE ALWAYS CHECK IT LOADS WITH: │
 NB. │   LOAD_HANDY=: 0                                  │
