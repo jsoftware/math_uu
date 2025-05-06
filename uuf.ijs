@@ -124,3 +124,4 @@ d^3 : d(m) [m^3] volume of cube
 4*PIb3*r^3 : r(m) [m^3] volume of sphere
 PIb3*h*r^2 : r(m),h(m) [m^3] volume of cone
 PI*h*r^2 : r(m),h(m) [m^3] volume of cylinder
+)
